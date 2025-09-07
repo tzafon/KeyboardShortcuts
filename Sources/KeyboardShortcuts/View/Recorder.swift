@@ -115,6 +115,7 @@ extension KeyboardShortcuts {
 									isActive = false
 								} else if case .set = mode {
 									KeyboardShortcuts.reset([name])
+									onChange?(nil)
 								}
 							},
 							label: {
