@@ -345,23 +345,23 @@ extension NSEvent.ModifierFlags: CustomStringConvertible {
 		var description = [String]()
 
 		if contains(.control) {
-			description.append("CTRL")
+			description.append("Control")
 		}
 
 		if contains(.option) {
-			description.append("OPTION")
+			description.append("Option")
 		}
 
 		if contains(.shift) {
-			description.append("SHIFT")
+			description.append("Shifft")
 		}
 
 		if contains(.command) {
-			description.append("COMMAND")
+			description.append("Command")
 		}
 
 		if contains(.function) {
-			description.append("FN")
+			description.append("Fn")
 		}
 
 		return description.joined(separator: " + ")
