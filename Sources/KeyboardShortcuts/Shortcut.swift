@@ -214,6 +214,15 @@ private let keyToCharacterMapping: [KeyboardShortcuts.Key: String] = [
 	.keypadPlus: "+\u{20e3}"
 ]
 
+private let humanKeyToCharacterMapping: [KeyboardShortcuts.Key: String] = [
+	.return: "Return",
+	.delete: "Delete",
+	.deleteForward: "Delete Forward",
+	.escape: "Esc",
+	.space: "Space",
+	.tab: "Tab",
+]
+
 private func stringFromKeyCode(_ keyCode: Int) -> String {
 	String(format: "%C", keyCode)
 }
@@ -250,6 +259,54 @@ extension KeyboardShortcuts.Shortcut {
 			let key,
 			let character = keyToCharacterMapping[key]
 		{
+			return character
+		}
+
+		guard
+			let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
+			let layoutDataPointer = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)
+		else {
+			return nil
+		}
+
+		let layoutData = unsafeBitCast(layoutDataPointer, to: CFData.self)
+		let keyLayout = unsafeBitCast(CFDataGetBytePtr(layoutData), to: UnsafePointer<CoreServices.UCKeyboardLayout>.self)
+		var deadKeyState: UInt32 = 0
+		let maxLength = 4
+		var length = 0
+		var characters = [UniChar](repeating: 0, count: maxLength)
+
+		let error = CoreServices.UCKeyTranslate(
+			keyLayout,
+			UInt16(carbonKeyCode),
+			UInt16(CoreServices.kUCKeyActionDisplay),
+			0, // No modifiers
+			UInt32(LMGetKbdType()),
+			OptionBits(CoreServices.kUCKeyTranslateNoDeadKeysBit),
+			&deadKeyState,
+			maxLength,
+			&length,
+			&characters
+		)
+
+		guard error == noErr else {
+			return nil
+		}
+
+		return String(utf16CodeUnits: characters, count: length)
+	}
+
+	@MainActor // `TISGetInputSourceProperty` crashes if called on a non-main thread.
+	fileprivate func humanKeyToCharacter() -> String? {
+		// Some characters cannot be automatically translated.
+		if
+			let key,
+			let character = humanKeyToCharacterMapping[key]
+		{
+			return character
+		}
+
+		if let key, let character = keyToCharacterMapping[key] {
 			return character
 		}
 
@@ -325,6 +382,12 @@ extension KeyboardShortcuts.Shortcut: CustomStringConvertible {
 	public var description: String {
 		// We use `.capitalized` so it correctly handles “⌘Space”.
 		modifiers.description + (keyToCharacter()?.capitalized ?? "�")
+	}
+
+	@MainActor
+	public var humanDescription: String {
+		let key = humanKeyToCharacter()?.capitalized ?? "�"
+		return modifiers.humanDescription + " + \(key)"
 	}
 }
 #endif

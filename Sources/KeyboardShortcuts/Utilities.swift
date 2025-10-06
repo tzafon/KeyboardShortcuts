@@ -340,6 +340,32 @@ extension NSEvent.ModifierFlags: CustomStringConvertible {
 
 		return description
 	}
+
+	public var humanDescription: String {
+		var description = [String]()
+
+		if contains(.control) {
+			description.append("CTRL")
+		}
+
+		if contains(.option) {
+			description.append("OPTION")
+		}
+
+		if contains(.shift) {
+			description.append("SHIFT")
+		}
+
+		if contains(.command) {
+			description.append("COMMAND")
+		}
+
+		if contains(.function) {
+			description.append("FN")
+		}
+
+		return description.joined(separator: " + ")
+	}
 }
 
 
