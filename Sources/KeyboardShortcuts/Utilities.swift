@@ -353,7 +353,7 @@ extension NSEvent.ModifierFlags: CustomStringConvertible {
 		}
 
 		if contains(.shift) {
-			description.append("Shifft")
+			description.append("Shift")
 		}
 
 		if contains(.command) {
